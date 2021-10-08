@@ -17,6 +17,12 @@ Current active users: @John, @Patrick, @Backer
 ALL Welcome to my server!
 ```
 
+```MSG @recipient msg``` - sends **msg** to tagged **recipient**
+- Example:
+```
+MSG @Patrick You are Banned!
+```
+
 ### Client commands:
 
 ```MSG @recipient msg``` - sends **msg** to tagged **recipient**

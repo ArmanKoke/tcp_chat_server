@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -62,6 +63,7 @@ const (
 	MSG
 	ALL
 	CLIENTS
+	DELIMETER = "//"
 )
 
 type Command struct {
@@ -118,7 +120,6 @@ func (c *Core) Read() error {
 		msg = msg[:len(msg)-1]
 		cmd := bytes.TrimSpace(bytes.Split(msg, []byte(" "))[0])
 		args := bytes.TrimSpace(bytes.TrimPrefix(msg, cmd))
-
 		// For different scopes simplified
 		switch string(cmd) {
 		case "CLIENTS":
@@ -127,6 +128,27 @@ func (c *Core) Read() error {
 			c.broadcast(args)
 		case "":
 			continue
+		case "MSG":
+			args = bytes.TrimSpace(args)
+			if len(args) == 0 {
+				fmt.Println("Specify recipient")
+				continue
+			}
+			if args[0] != '@' {
+				fmt.Println("Recipient must be user ('@nickname')")
+				continue
+			}
+			recipient := bytes.TrimSpace(bytes.Split(args, []byte(" "))[0])
+			args := bytes.TrimSpace(bytes.TrimPrefix(args, recipient))
+			if len(args) == 0 {
+				fmt.Println("Please enter message for recipient!")
+				continue
+			}
+			c.message(
+				"Admin wrote: ",
+				string(recipient[1:]),
+				Message{Content: args},
+			)
 		default:
 			fmt.Println("Command not found")
 		}
@@ -170,7 +192,7 @@ func (c *Core) broadcast(msg []byte) {
 
 func (c *Core) message(sender, recipient string, msg Message) {
 	if client, ok := c.Clients[recipient]; ok {
-		client.Write(append([]byte("@"+sender+" "), msg.Content...))
+		client.Write(append([]byte(sender), msg.Content...))
 	}
 }
 
@@ -241,7 +263,7 @@ func (c *Client) register(args []byte) error {
 	return nil
 }
 
-var Splitter = []byte("//")
+var Splitter = []byte(DELIMETER)
 
 func (c *Client) msg(args []byte) error {
 	args = bytes.TrimSpace(args)
@@ -269,7 +291,7 @@ func (c *Client) msg(args []byte) error {
 
 	c.Order <- Command{
 		recipient: string(recipient[1:]),
-		sender:    c.Name,
+		sender:    "@" + c.Name + " ",
 		msg: Message{
 			Len:     int(length),
 			Content: body,
@@ -282,7 +304,17 @@ func (c *Client) msg(args []byte) error {
 }
 
 func (c *Client) Write(b []byte) {
-	if _, err := c.Conn.Write(append(b, []byte("\n")...)); err != nil {
+	if _, err := c.Conn.Write(encodeResponse(b)); err != nil {
 		fmt.Println("Error while writing to client:", err)
 	}
+}
+
+func encodeResponse(b []byte) []byte {
+	var msg Message
+	if err := json.Unmarshal(b, &msg); err != nil {
+		strb := string(b)
+		return []byte(fmt.Sprintf("%d%s%s\n", len(strb), DELIMETER, strb))
+	}
+
+	return []byte(msg.Str)
 }
