@@ -1,5 +1,7 @@
 # Chat Server
 
+Server for broadcasting to connected clients and messaging between clients.
+
 ## Usage
 ### Server commands:
 
@@ -23,8 +25,8 @@ ALL Welcome to my server!
 MSG @John Hey sup!
 ```
 ## Note!
-If you don't see ```Type command: ``` just press *Enter* key
+If you don't see ```Type command:``` just press *Enter* key
 
-Server is used with following Client:
+Server is used with following [Client](https://github.com/ArmanKoke/tcp_chat_client)
 
 Or make new one by yourself because it has certain format for commands. 
