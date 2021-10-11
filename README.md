@@ -6,11 +6,11 @@ Server for broadcasting to connected clients and messaging between clients.
 ### Server commands:
 
 ```CLIENTS``` - shows list of active clients
-- Example:
+- Response:
 ```
 Current active users: @John, @Patrick, @Backer
 ```
-
+-----
 ```ALL msg``` - broadcasts **msg** across all active clients
 - Example:
 ```
